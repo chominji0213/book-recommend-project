@@ -13,7 +13,6 @@ load_dotenv()
 
 PERSIST_DIR = "vectorstore"
 EMBEDDING_MODEL = "gemini-embedding-2-preview"  
-BATCH_SIZE = 100 
 
 def build_vector_store(books_path: str = "data/books.json"):
     """
@@ -28,31 +27,17 @@ def build_vector_store(books_path: str = "data/books.json"):
         documents.append(Document(
             page_content=book['줄거리'],
             metadata={
+                'id': book['id'],
                 '제목': book['제목'],
                 '저자': book['저자'],
                 '출간일': book['출간일'],
                 '정가': book['정가']
             }
         ))
+
     embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
-    vector_store = None
-
-    for i in range(0, len(documents), BATCH_SIZE):
-        batch = documents[i:i + BATCH_SIZE]
-        print(f"임베딩 중... {i + len(batch)}/{len(documents)}")
-
-        if vector_store is None:
-            vector_store = Chroma.from_documents(
-                documents=batch, embedding=embeddings, persist_directory=PERSIST_DIR
-            )
-        else:
-            vector_store.add_documents(batch)
-
-        if i + BATCH_SIZE < len(documents):
-            time.sleep(60)  # 다음 배치 전에 60초 대기
-
-    
-
+    Chroma.from_documents(documents=documents, embedding=embeddings, persist_directory=PERSIST_DIR) #persist_directory: 만든 벡터DB를 이 폴더에 파일로 저장(영구저장)
+   
 
 def load_vector_store():
     """
@@ -78,6 +63,7 @@ def search_books(query: str, k: int = 5) -> dict:
     books = []
     for doc in results:
         books.append({
+            'id': doc.metadata['id'],
             '제목': doc.metadata['제목'],
             '줄거리': doc.page_content,
             '저자': doc.metadata['저자'],
