@@ -8,18 +8,6 @@ from tools.vector_store import search_books
 from tools.price_tool import check_price
 from rich import print as rprint
 
-
-# TODO: State 정의
-#   class BookState(TypedDict):
-#       query: str              # 사용자 질문
-#       search_results: dict    # search_books() 검색 결과
-#       price_info: list        # check_price() 결과들을 담은 리스트
-#       answer: str             # 최종 답변
-#       history: list           # (설계 개선) 이전 대화 요약을 담아 멀티턴 맥락 유지에 활용
-#         - 영화 프로젝트에서는 이 필드가 없어서 "다섯개 더 보여줘" 같은 후속 질문에서
-#           이전 맥락(장르 등)을 잃어버렸음. 이번엔 generate_node가 answer를 만들 때
-#           history에 (질문, 답변) 같은 걸 누적해서 함께 프롬프트에 넣어줄 것.
-
 class BookState(TypedDict):
     query: str    # 사용자 질문
     search_results: dict # search_books() 검색 결과
@@ -32,7 +20,11 @@ def retrieve_node(state):
     """
     질문 검색노드
     """
-    result = search_books(state['query'])
+    history = state.get('history', [])
+    recent_queries = ' '.join([h['query'] for h in history[-2:]]) #최근 2턴만 가져옴
+    search_query = f"{recent_queries} {state['query']}".strip()
+
+    result = search_books(search_query)
 
     return {'search_results': result}
 
@@ -45,9 +37,13 @@ def check_price_node(state):
     books = state['search_results'].get('결과', [])
 
     for book in books:
-        bookId = book['id']
-        result = check_price(bookId)
-
+        try:
+          bookId = book['id']
+          result = check_price(bookId)
+        except Exception as e:
+          rprint(f"[check_price_node] 가격조회 실패: {e}")
+          result = {'error': '가격 정보를 가져오지 못했어요.'}
+          
         prices.append(result)
 
     return {'price_info': prices}
@@ -57,7 +53,11 @@ def generate_node(state):
     """
     답변 생성 노드: 검색 결과 + 가격 정보를 종합해서 LLM이 추천 답변을 만들게 함.
     """
+    if 'error' in state['search_results']:
+        return {'answer': '죄송합니다. 취향에 맞는 책을 찾지 못했습니다. 다른 분위기나 키워드로 재검색하시길 바랍니다'}
+
     history = state.get('history', [])
+
     try:
       llm = init_chat_model('gemini-3.1-flash-lite', model_provider='google_genai')
       prompt = f'''

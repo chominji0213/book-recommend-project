@@ -2,10 +2,36 @@ import streamlit as st
 import uuid
 from llm_client import build_agent, ask
 
-# TODO: movie-recommend-project의 app.py를 그대로 복사해서 가져오고 아래 2가지만 바꾸기
-#   1) st.title("...")을 "도서 추천 챗봇"으로 변경
-#   2) st.chat_input(...) 안내 문구를 책 취향을 물어보는 문구로 변경
-#      예: st.chat_input("어떤 책을 찾으세요?")
-#
-# 사이드바 "새 대화 시작" 버튼, session_state 초기화, 메시지 히스토리 렌더링 부분은
-# 영화 프로젝트 그대로 재사용하면 됨 (바뀌는 게 없음).
+with st.sidebar:
+    if st.button('새 대화 시작'):
+        st.session_state.thread_id = str(uuid.uuid4())
+        st.session_state.messages = []
+        st.rerun()
+
+st.title('도서 추천 챗봇')
+
+if 'agent' not in st.session_state:
+    st.session_state.agent = build_agent()
+
+if 'thread_id' not in st.session_state:
+    st.session_state.thread_id = str(uuid.uuid4())
+
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg['role']):
+        st.write(msg['content'])
+
+user_input = st.chat_input('어떤 책을 찾으세요?')
+
+if user_input and user_input.strip():
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.write(user_input)
+
+    with st.chat_message("assistant"):
+        answer = ask(st.session_state.agent, user_input, st.session_state.thread_id)
+        st.write(answer)
+
+    st.session_state.messages.append({"role": "assistant", "content": answer})
