@@ -35,8 +35,4 @@ def check_price(item_id: str) -> dict:
         
 
     return {'판매가': salePrice, '재고상태': stockStatus}
-
-
-if __name__ == "__main__":
-   rprint(check_price('398876871'))
     
