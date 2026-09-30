@@ -109,9 +109,3 @@ def ask(agent, user_message: str, thread_id: str) -> str:
     result = agent.invoke({'query': user_message}, config)
 
     return result['answer']
-
-
-if __name__ == "__main__":
-    agent = build_agent()
-    rprint(ask(agent, "출퇴근길에 가볍게 읽을 에세이 추천해줘", "test-thread"))
-    rprint(ask(agent, "그 중에 제일 저렴한 거 하나만 다시 알려줘", "test-thread"))
