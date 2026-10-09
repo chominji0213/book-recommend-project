@@ -86,7 +86,14 @@ python -m tools.vector_store
 streamlit run app.py
 ```
 
-Docker 컨테이너화 및 배포는 다음 단계로 진행 예정입니다.
+### Docker로 실행
+
+```bash
+docker build -t book-recommend-project .
+docker run -p 8501:8501 --env-file .env book-recommend-project
+```
+
+`entrypoint.sh`가 컨테이너 시작 시 `data/books.json`, `vectorstore/`가 없으면 자동으로 생성합니다. 이미 존재하면 알라딘 API와 임베딩 API를 재호출하지 않고 건너뜁니다.
 
 ## 알게 된 점 / 한계
 
@@ -99,5 +106,5 @@ Docker 컨테이너화 및 배포는 다음 단계로 진행 예정입니다.
 ## 향후 개선 아이디어
 
 - QueryType/카테고리를 다양화해 데이터 풀을 늘리고, 카테고리 메타데이터 기반 하이브리드 검색(벡터 유사도 + 카테고리 필터) 추가
-- Docker + Render로 배포 (영화 프로젝트와 동일한 패턴)
+- Render로 배포 (영화 프로젝트와 동일한 패턴)
 - 스트리밍 응답 지원 (`ask_stream`)
