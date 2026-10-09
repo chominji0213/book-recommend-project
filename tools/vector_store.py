@@ -74,5 +74,5 @@ def search_books(query: str, k: int = 5) -> dict:
     return {'검색어': query, '결과': books}
 
 if __name__ == "__main__":
-  build_vector_store()
+    build_vector_store()
     print("벡터DB 구축 완료")
