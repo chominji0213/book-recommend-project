@@ -1,6 +1,5 @@
 import os
 import requests
-from rich import print as rprint
 from dotenv import load_dotenv
 load_dotenv()
 

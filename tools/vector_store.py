@@ -3,12 +3,10 @@
 """
 
 import json
-import time
 from dotenv import load_dotenv
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from rich import print as rprint
 load_dotenv()
 
 PERSIST_DIR = "vectorstore"
